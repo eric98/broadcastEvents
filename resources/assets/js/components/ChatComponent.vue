@@ -16,7 +16,7 @@
         }
       },
       mounted() {
-        Echo.channel('new-message')
+        Echo.private('new-message')
           .listen('ChatMessage', (event) => {
             console.log('He rebut un nou event de broadcast')
             console.log(event)
