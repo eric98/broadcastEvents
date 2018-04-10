@@ -23,3 +23,7 @@ Route::get('/message', function () {
 
 //    event(new ChatMessage());
 });
+
+Route::get('chat/1',function () {
+    return view('chat');
+});
