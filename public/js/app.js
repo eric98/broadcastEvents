@@ -13945,6 +13945,14 @@ if (token) {
   console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
 }
 
+var user = document.head.querySelector('meta[name="user"]');
+
+if (user) {
+  window.user = JSON.parse(user.content);
+} else {
+  console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
+}
+
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
  * for events that are broadcast by Laravel. Echo and event broadcasting
@@ -52294,21 +52302,49 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
+      activePeer: false,
+      newMessage: '',
       messages: [{ body: 'Missatge 1' }, { body: 'Missatge 2' }, { body: 'Missatge 3' }]
     };
+  },
+
+  methods: {
+    tapParticipants: function tapParticipants() {
+      Echo.private('new-message').whisper('typing', {
+        name: user.name
+      });
+    },
+    send: function send() {
+      axios.post('/chat_message', {
+        'body': this.newMessage
+      });
+    }
   },
   mounted: function mounted() {
     var _this = this;
 
+    console.log('Component mounted.');
     Echo.private('new-message').listen('ChatMessage', function (event) {
       console.log('He rebut un nou event de broadcast');
       console.log(event);
 
       _this.messages.push({ body: event.message });
+    }).listenForWhisper('typing', function (e) {
+      console.log(e.name);
+      _this.activePeer = {};
+      _this.activePeer.name = e.name;
+      setTimeout(function () {
+        _this.activePeer = false;
+      }, 1000);
     });
   }
 });
@@ -52321,12 +52357,44 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c(
-    "ul",
-    _vm._l(_vm.messages, function(message) {
-      return _c("li", [_vm._v(_vm._s(message.body))])
-    })
-  )
+  return _c("div", [
+    _c(
+      "ul",
+      _vm._l(_vm.messages, function(message) {
+        return _c("li", [_vm._v(_vm._s(message.body) + " ")])
+      })
+    ),
+    _vm._v(" "),
+    _c("input", {
+      directives: [
+        {
+          name: "model",
+          rawName: "v-model",
+          value: _vm.newMessage,
+          expression: "newMessage"
+        }
+      ],
+      attrs: { type: "text" },
+      domProps: { value: _vm.newMessage },
+      on: {
+        keydown: _vm.tapParticipants,
+        input: function($event) {
+          if ($event.target.composing) {
+            return
+          }
+          _vm.newMessage = $event.target.value
+        }
+      }
+    }),
+    _vm._v(" "),
+    _c("button", { on: { click: _vm.send } }, [_vm._v("Enviar")]),
+    _vm._v(" "),
+    _vm.activePeer
+      ? _c("span", [
+          _vm._v("User " + _vm._s(_vm.activePeer.name) + " is typing...")
+        ])
+      : _vm._e()
+  ])
 }
 var staticRenderFns = []
 render._withStripped = true
