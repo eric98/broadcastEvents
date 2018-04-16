@@ -6,6 +6,11 @@
         <input type="text" v-model="newMessage" @keydown="tapParticipants">
         <button @click="send">Enviar</button>
         <span v-if="activePeer">User {{ activePeer.name}} is typing...</span>
+
+        Active users:
+        <ul>
+            <li v-for="activeUser in activeUsers">{{activeUser.name}}</li>
+        </ul>
     </div>
 </template>
 
@@ -13,6 +18,7 @@
   export default {
     data() {
       return {
+        activeUsers: [],
         activePeer: false,
         newMessage: '',
         messages: [
@@ -37,16 +43,33 @@
     },
     mounted() {
       console.log('Component mounted.')
-      Echo.private('new-message')
+      Echo.join('new-message')
+        .here((users) => {
+//          console.log(users)
+          this.activeUsers = users
+        })
+        .joining((user) => {
+//          console.log('user added:')
+//          console.log(user)
+          this.activeUsers.push(user)
+        })
+        .leaving((user) => {
+//          console.log('user leaving:')
+//          console.log(user)
+          const foundUser = this.activeUsers.find(function (u) {
+            return u.id == user.id
+          })
+          this.activeUsers.splice(this.activeUsers.indexOf(findUser),1)
+        })
         .listen('ChatMessage', (event) => {
-          console.log('He rebut un nou event de broadcast')
-          console.log(event);
+//          console.log('He rebut un nou event de broadcast')
+//          console.log(event);
 
           this.messages.push({ body: event.message})
 
         })
         .listenForWhisper('typing', (e) => {
-          console.log(e.name);
+//          console.log(e.name);
           this.activePeer = {}
           this.activePeer.name = e.name
           setTimeout(() => {

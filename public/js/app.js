@@ -52307,10 +52307,16 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
+      activeUsers: [],
       activePeer: false,
       newMessage: '',
       messages: [{ body: 'Missatge 1' }, { body: 'Missatge 2' }, { body: 'Missatge 3' }]
@@ -52333,7 +52339,21 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     var _this = this;
 
     console.log('Component mounted.');
-    Echo.private('new-message').listen('ChatMessage', function (event) {
+    Echo.join('new-message').here(function (users) {
+      console.log(users);
+      _this.activeUsers = users;
+    }).joining(function (user) {
+      console.log('user added:');
+      console.log(user);
+      _this.activeUsers.push(user);
+    }).leaving(function (user) {
+      console.log('user leaving:');
+      console.log(user);
+      var foundUser = _this.activeUsers.find(function (u) {
+        return u.id == user.id;
+      });
+      _this.activeUsers.splice(_this.activeUsers.indexOf(findUser), 1);
+    }).listen('ChatMessage', function (event) {
       console.log('He rebut un nou event de broadcast');
       console.log(event);
 
@@ -52393,7 +52413,14 @@ var render = function() {
       ? _c("span", [
           _vm._v("User " + _vm._s(_vm.activePeer.name) + " is typing...")
         ])
-      : _vm._e()
+      : _vm._e(),
+    _vm._v("\n\n    Active users:\n    "),
+    _c(
+      "ul",
+      _vm._l(_vm.activeUsers, function(activeUser) {
+        return _c("li", [_vm._v(_vm._s(activeUser.name))])
+      })
+    )
   ])
 }
 var staticRenderFns = []
